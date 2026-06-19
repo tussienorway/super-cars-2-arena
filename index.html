@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JARVIS Terminal - Super Cars 2: Arena & Godot 4 Clone</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+        
+        body {
+            background-color: #050a05;
+            color: #00ff00;
+            font-family: 'Share Tech Mono', monospace;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+        }
+        
+        /* CRT Scanlines Effect */
+        body::after {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            aspect-ratio: 1;
+            background-size: 100% 4px, 6px 100%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .terminal {
+            max-width: 1200px;
+            margin: 0 auto;
+            border: 2px solid #00ff00;
+            background-color: #030703;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+            position: relative;
+        }
+
+        header {
+            border-bottom: 2px solid #00ff00;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        @media(max-width: 800px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        h1, h2, h3 {
+            color: #00ff00;
+            margin-top: 0;
+        }
+
+        h2 {
+            border-bottom: 1px dashed #00ff00;
+            padding-bottom: 5px;
+            margin-top: 20px;
+        }
+
+        .box {
+            border: 1px solid #00ff00;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: #040904;
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        li {
+            margin-bottom: 8px;
+            padding-left: 15px;
+            position: relative;
+        }
+
+        li::before {
+            content: ">";
+            position: absolute;
+            left: 0;
+            color: #00ff00;
+        }
+
+        .cron-card, .note-card {
+            border: 1px dashed #00ff00;
+            padding: 10px;
+            margin-bottom: 15px;
+            background-color: #050f05;
+        }
+
+        .tag {
+            display: inline-block;
+            background-color: #00ff00;
+            color: #050a05;
+            padding: 2px 6px;
+            font-size: 0.8em;
+            margin-right: 5px;
+            font-weight: bold;
+        }
+
+        .blink {
+            animation: blinker 1s linear infinite;
+        }
+
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #00ff00;
+            color: #030703;
+            padding: 10px 20px;
+            text-decoration: none;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.4);
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            background-color: #050f05;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <header>
+            <div style="display: flex; justify-content: space-between;">
+                <span>STASJON ID: SUPER-CARS-DEV-SERVER</span>
+                <span>SYSTEMTID: 2026-06-19 02:03:03</span>
+            </div>
+            <h1 style="margin: 10px 0 0 0;">SYSTEMLOGG: Super Cars 2: Arena & Godot 4 Clone</h1>
+            <div style="font-weight: bold; margin-top: 5px;">STATUS: <span class="blink">[in_progress]</span></div>
+        </header>
+
+        <div class="grid">
+            <div class="main-column">
+                <div class="box">
+                    <h2>🎮 SPILLBARE VERSJONER (KJØR DIREKTE)</h2>
+                    <p style="margin-bottom: 15px;">Dragon Reborn! Klikk under for å starte prototypene dine direkte i nettleseren:</p>
+                    <a href="game_prototype.html" target="_blank" class="btn">🚀 SPILL ARENA-PROTOTYPEN</a>
+                    <a href="engineering_dashboard.html" target="_blank" class="btn">📊 SE DET DETALJERTE DASHBORDET</a>
+                </div>
+
+                <div class="box">
+                    <h2>💡 PROSJEKTSPESIFIKASJONER</h2>
+                    <p style="white-space: pre-wrap; font-size: 0.95em; line-height: 1.4;">Utvikle en nettbasert og Godot-basert klone av Super Cars 2, med spillbar arena, 2D-fysikk, våpen (standard, søkende og spinnende missiler), kollisjonssimulering, delt skjerm, Bfxr-lyder og et heuristisk Q&A-system, basert på dine HTML-prototyper.</p>
+                </div>
+
+                <div class="box">
+                    <h2>🧠 JARVIS' AUTONOME SPILLEUTVIKLER-LOGIKK</h2>
+                    <p style="white-space: pre-wrap; font-size: 0.95em; line-height: 1.4;">Vi har analysert de to HTML-filene i din Downloads-mappe. Prototypen inneholder en velfungerende HTML5 Canvas 2D fysikk- og skyte-mekanikk, mens dashbordet gir oss en komplett arkitektonisk og spillteknisk plan for Godot 4-porting. Vi etablerer en uavbrutt kodesyklus med cronjobs og dytter et glødende retro-dashboard til GitHub Pages.</p>
+                </div>
+
+                <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="box">
+                        <h2>✅ UTFØRTE LEVERANSER</h2>
+                        <ul><li>[OK] Analysert /home/tussie/Downloads/super_cars_2_arena_prototype.html for kjernefysikk og mekanikk.</li><li>[OK] Analysert /home/tussie/Downloads/utvikling_av_super_cars_2_klone_dashboard.html for arkitekturplaner (delt skjerm, Bfxr, Q&A).</li><li>[OK] Etablert lokalt prosjektregister under project-tracker.</li></ul>
+                    </div>
+                    <div class="box">
+                        <h2>⏳ GJENSTÅENDE MILÆPÆLER</h2>
+                        <ul><li>[PENDING] Opprette dedikert GitHub repository tussienorway/super-cars-2-arena.</li><li>[PENDING] Aktivere glødende retro-dashboard på GitHub Pages.</li><li>[PENDING] Skrive et autonomt utviklingsskript (super_cars_dev_cycle.py) og koble det til en cronjobb.</li><li>[PENDING] Implementere forbedret kollisjonsdynamikk og side-skrensing.</li><li>[PENDING] Integrere chiptune-lyder (Bfxr) og splittet skjerm for to spillere.</li></ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="side-column">
+                <div class="box">
+                    <h2>📠 INTERNPOST & MEMOER</h2>
+                    
+        <div class="note-card">
+            <div style="display: flex; justify-content: space-between;">
+                <strong>MAPPE #2</strong>
+                <span>2026-06-19 02:01</span>
+            </div>
+            <div style="margin: 5px 0;"><strong>STATUS:</strong> ACTIVE</div>
+            
+            <div style="margin: 10px 0; border-left: 2px solid #00ff00; padding-left: 10px; font-style: italic;">
+                "Ny ordre mottatt: Utvikle Super Cars 2: Arena og Godot 4 Klone. Mappe registrert under saksnummer."
+            </div>
+            <div><span class="tag">supercars</span><span class="tag">viktig</span></div>
+        </div>
+        
+                </div>
+
+                <div class="box">
+                    <h2>⚙️ RETRO CRON-SYKLER (HERMES)</h2>
+                    
+                </div>
+            </div>
+        </div>
+
+        <footer style="margin-top: 20px; border-top: 2px solid #00ff00; padding-top: 10px; font-size: 0.9em; text-align: center;">
+            THE PATTERN WEAVES AS THE WHEEL WILLS. SUPER CARS II CLONE DEV ENGINE ACTIVE.
+        </footer>
+    </div>
+</body>
+</html>

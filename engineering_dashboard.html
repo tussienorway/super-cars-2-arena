@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Cars 2: Godot 4 & AI Engineering Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Chosen Palette: Warm Neutrals with Retro Amber and Tech Teal accents -->
+    <!-- Application Structure Plan: A task-oriented tabbed dashboard structure. This layout prevents overwhelming the user with a massive wall of text. It segments the complex engineering report into logical developmental phases: Overview, AI Tools, Mechanics, Architecture, and Testing. Users can explore specific domains of the project interactively, matching how an engineer or producer might review project documentation. -->
+    <!-- Visualization & Content Choices: 
+         1. Overview: Key project stats using simple styled HTML counters (Inform). 
+         2. AI Tools: Interactive "terminal" simulating AI commands (Inform/Interact) -> Demonstrates the Gemini integration without needing complex graphics.
+         3. Physics & Weapons: Radar Chart (Compare) -> Perfect for showing the trade-offs between different weapon types described in the report. Chart.js used.
+         4. Testing/VM: Bar Chart (Inform/Compare) -> Visualizes the strict VM hardware requirements versus typical host systems. Chart.js used.
+         All icons use Unicode. NO SVG/Mermaid. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body { scroll-behavior: smooth; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 400px; }
+        }
+        
+        .code-block { font-family: monospace; background-color: #1c1917; color: #a8a29e; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; }
+        .keyword { color: #f59e0b; }
+        .string { color: #10b981; }
+        .comment { color: #78716c; }
+        
+        .interactive-btn { transition: all 0.2s; }
+        .interactive-btn:hover { transform: scale(1.02); }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800 font-sans leading-relaxed min-h-screen flex flex-col">
+
+    <header class="bg-stone-900 text-stone-100 shadow-md border-b-4 border-amber-500 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center py-4">
+                <div class="flex items-center space-x-3 mb-4 md:mb-0">
+                    <div class="text-3xl bg-amber-500 text-stone-900 rounded p-1 font-bold">🏎️</div>
+                    <div>
+                        <h1 class="text-xl md:text-2xl font-bold tracking-tight">Project: Super Cars 2 (Godot 4)</h1>
+                        <p class="text-xs text-stone-400 uppercase tracking-widest">AI-drevet Utviklingsrapport</p>
+                    </div>
+                </div>
+                <nav class="flex space-x-1 md:space-x-2 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto">
+                    <button onclick="switchTab('oversikt')" id="btn-oversikt" class="nav-btn px-4 py-2 rounded-t-lg bg-stone-800 text-amber-500 font-medium border-b-2 border-amber-500 hover:bg-stone-700 whitespace-nowrap">📋 Oversikt</button>
+                    <button onclick="switchTab('ai')" id="btn-ai" class="nav-btn px-4 py-2 rounded-t-lg bg-stone-900 text-stone-400 font-medium hover:text-stone-100 hover:bg-stone-800 whitespace-nowrap">🧠 AI-Motor</button>
+                    <button onclick="switchTab('fysikk')" id="btn-fysikk" class="nav-btn px-4 py-2 rounded-t-lg bg-stone-900 text-stone-400 font-medium hover:text-stone-100 hover:bg-stone-800 whitespace-nowrap">⚙️ Fysikk & Våpen</button>
+                    <button onclick="switchTab('arkitektur')" id="btn-arkitektur" class="nav-btn px-4 py-2 rounded-t-lg bg-stone-900 text-stone-400 font-medium hover:text-stone-100 hover:bg-stone-800 whitespace-nowrap">🏗️ Arkitektur</button>
+                    <button onclick="switchTab('testing')" id="btn-testing" class="nav-btn px-4 py-2 rounded-t-lg bg-stone-900 text-stone-400 font-medium hover:text-stone-100 hover:bg-stone-800 whitespace-nowrap">💻 VM Testing</button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+        <section id="oversikt" class="tab-content active">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-stone-900 mb-4 border-l-4 border-amber-500 pl-4">Prosjektets Omfang og Historiske Kontekst</h2>
+                <p class="text-lg text-stone-700 mb-4">
+                    Krysningen mellom retrospektiv spillbevaring og moderne, kunstig intelligens-drevet programvareutvikling representerer et av de mest fascinerende feltene innen moderne ingeniørkunst. Denne rapporten utforsker rekonstruksjonen av Amiga-klassikeren <strong>Super Cars 2</strong> (1991) i spillmotoren <strong>Godot 4</strong> for Linux-plattformer.
+                </p>
+                <p class="text-lg text-stone-700">
+                    Spillet er ikke et rent racingspill, men bygger tungt på taktisk krigføring, økonomisk ressursforvaltning og flerspiller-dynamikk på delt skjerm. Prosjektet drives frem av Google AI Pro (Gemini 1.5 Pro) for å håndtere fysikkprogrammering, grensesnittdesign og systemarkitektur.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 text-center hover:shadow-md transition-shadow">
+                    <div class="text-4xl mb-3">🗄️</div>
+                    <div class="text-3xl font-bold text-amber-600 mb-1">1-2 Mill.</div>
+                    <div class="text-sm font-semibold text-stone-500 uppercase tracking-wide">Tokens Kontekstvindu</div>
+                    <p class="text-sm text-stone-600 mt-3">Tillater AI å prosessere hele Godot-dokumentasjonen og spillets kildekode samtidig.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 text-center hover:shadow-md transition-shadow">
+                    <div class="text-4xl mb-3">🏁</div>
+                    <div class="text-3xl font-bold text-teal-600 mb-1">20</div>
+                    <div class="text-sm font-semibold text-stone-500 uppercase tracking-wide">Unike Baner</div>
+                    <p class="text-sm text-stone-600 mt-3">Fulllastet med ramper, jettegryter og strategiske flaskehalser for intens racing.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 text-center hover:shadow-md transition-shadow">
+                    <div class="text-4xl mb-3">🐧</div>
+                    <div class="text-3xl font-bold text-stone-700 mb-1">X11/Linux</div>
+                    <div class="text-sm font-semibold text-stone-500 uppercase tracking-wide">Primær Målplattform</div>
+                    <p class="text-sm text-stone-600 mt-3">Stresstestet i isolerte Ubuntu VM-miljøer med OpenGL 3.3 for maksimal kompatibilitet.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="ai" class="tab-content">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-stone-900 mb-4 border-l-4 border-teal-600 pl-4">Paradigmeskiftet med Google AI Pro</h2>
+                <p class="text-lg text-stone-700">
+                    Tradisjonell spillutvikling krever kontinuerlig kontekstveksling. Google AI Pro, drevet av Gemini 1.5 Pro med "Sparse Mixture-of-Experts" (MoE) arkitektur, eliminerer denne friksjonen. Opplev hvordan de ulike AI-kommandoene manipulerer kodebasen i sanntid.
+                </p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-8 bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                <div class="w-full lg:w-1/3 flex flex-col space-y-3">
+                    <h3 class="text-xl font-bold text-stone-800 mb-2">Interaktive IDE Kommandoer</h3>
+                    <button onclick="updateTerminal('generate')" class="interactive-btn text-left p-4 rounded-lg bg-stone-100 hover:bg-teal-50 border-l-4 border-transparent hover:border-teal-500 focus:outline-none focus:bg-teal-50 focus:border-teal-500">
+                        <span class="font-bold text-teal-700">/generate</span>
+                        <p class="text-sm text-stone-600 mt-1">Genererer ny kode basert på naturlig språk.</p>
+                    </button>
+                    <button onclick="updateTerminal('fix')" class="interactive-btn text-left p-4 rounded-lg bg-stone-100 hover:bg-amber-50 border-l-4 border-transparent hover:border-amber-500 focus:outline-none focus:bg-amber-50 focus:border-amber-500">
+                        <span class="font-bold text-amber-700">/fix</span>
+                        <p class="text-sm text-stone-600 mt-1">Feilsøker syntaks- og logikkfeil i fysikkmotoren.</p>
+                    </button>
+                    <button onclick="updateTerminal('doc')" class="interactive-btn text-left p-4 rounded-lg bg-stone-100 hover:bg-blue-50 border-l-4 border-transparent hover:border-blue-500 focus:outline-none focus:bg-blue-50 focus:border-blue-500">
+                        <span class="font-bold text-blue-700">/doc</span>
+                        <p class="text-sm text-stone-600 mt-1">Autogenererer teknisk dokumentasjon.</p>
+                    </button>
+                    <button onclick="updateTerminal('simplify')" class="interactive-btn text-left p-4 rounded-lg bg-stone-100 hover:bg-purple-50 border-l-4 border-transparent hover:border-purple-500 focus:outline-none focus:bg-purple-50 focus:border-purple-500">
+                        <span class="font-bold text-purple-700">/simplify</span>
+                        <p class="text-sm text-stone-600 mt-1">Refaktorerer kompleks kode til lesbare strukturer.</p>
+                    </button>
+                </div>
+                <div class="w-full lg:w-2/3 bg-stone-900 rounded-lg p-1 flex flex-col">
+                    <div class="flex items-center px-4 py-2 border-b border-stone-700">
+                        <div class="flex space-x-2">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        </div>
+                        <div class="mx-auto text-xs text-stone-500 font-mono">Gemini_IDE_Integration.gd</div>
+                    </div>
+                    <div id="terminal-output" class="code-block flex-grow text-sm md:text-base">
+<span class="comment"># Velg en kommando til venstre for å se AI-ens respons.</span>
+<span class="keyword">func</span> <span class="string">_ready</span>():
+    <span class="keyword">print</span>(<span class="string">"Venter på AI-instruks..."</span>)
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="fysikk" class="tab-content">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-stone-900 mb-4 border-l-4 border-amber-500 pl-4">Spillmekanikk: Fysikk og Taktisk Geometri</h2>
+                <p class="text-lg text-stone-700 mb-4">
+                    For å gjenskape den unike arkade-følelsen, benyttes Godots <code>RigidBody2D</code>. Fysikken styres av matematiske algoritmer for drivkraft, bremsekraft, vinkelrett skrensekraft og rullemotstand, spesialtilpasset for å forhindre is-glidning.
+                </p>
+                <p class="text-lg text-stone-700">
+                    Våpensystemet er kompromissløst. Sammenlign de ulike våpentypenes kapasiteter i diagrammet under for å forstå den taktiske dybden.
+                </p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-8 items-center bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                <div class="w-full lg:w-1/2">
+                    <div class="chart-container">
+                        <canvas id="weaponChart"></canvas>
+                    </div>
+                </div>
+                <div class="w-full lg:w-1/2 grid gap-4">
+                    <div class="p-4 border border-stone-100 bg-stone-50 rounded-lg">
+                        <h4 class="font-bold text-stone-800 flex items-center">🚀 Standard Missiler</h4>
+                        <p class="text-sm text-stone-600 mt-1">Skytes langs bilens Z-akse. Høy skade, krever presisjon. Bygget med <code>KinematicBody2D</code>.</p>
+                    </div>
+                    <div class="p-4 border border-stone-100 bg-stone-50 rounded-lg">
+                        <h4 class="font-bold text-stone-800 flex items-center">🎯 Søkende Missiler</h4>
+                        <p class="text-sm text-stone-600 mt-1">Låser seg på mål via vektormatematikk og <code>look_at()</code> interpolering.</p>
+                    </div>
+                    <div class="p-4 border border-stone-100 bg-stone-50 rounded-lg">
+                        <h4 class="font-bold text-stone-800 flex items-center">🌪️ Spinnende Missiler</h4>
+                        <p class="text-sm text-stone-600 mt-1">Offensivt skjold rotert rundt spilleren via <code>rotation += speed * delta</code>.</p>
+                    </div>
+                    <div class="p-4 border border-stone-100 bg-stone-50 rounded-lg">
+                        <h4 class="font-bold text-stone-800 flex items-center">💣 Landminer</h4>
+                        <p class="text-sm text-stone-600 mt-1">Stasjonære <code>Area2D</code> noder designet for å utløses via <code>_on_body_entered</code> og ødelegge forfølgere.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="arkitektur" class="tab-content">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-stone-900 mb-4 border-l-4 border-teal-600 pl-4">Visuell Arkitektur og Heuristikk</h2>
+                <p class="text-lg text-stone-700">
+                    Suksessen til klonen avhenger av et autentisk flerspillermiljø på delt skjerm, lyddesign inspirert av Amiga-eraen, og det ikoniske, tekstbaserte hendelsessystemet (Q&A) som dynamisk belønner sluhet og straffer ærlighet.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <h3 class="text-xl font-bold text-stone-800 mb-4">Synkronisering av Delt Skjerm</h3>
+                    <p class="text-sm text-stone-600 mb-4">
+                        For at to separate visningsporter (<code>SubViewport</code>) skal eksistere i samme fysiske rom og tillate kollisjoner mellom spillerne, må motorens interne koordinatrom manipuleres.
+                    </p>
+                    <div class="code-block text-sm">
+<span class="comment"># Logikk for verdensdeling i Godot 4</span>
+<span class="keyword">func</span> <span class="string">_ready</span>() -> <span class="keyword">void</span>:
+    <span class="comment"># Tvinger begge Viewports til å dele fysikkrom</span>
+    players[1].sub_viewport.world_2d = players[0].sub_viewport.world_2d
+                    </div>
+                    <div class="mt-6 p-4 bg-amber-50 border border-amber-200 rounded text-sm text-amber-800">
+                        <strong>Kritisk:</strong> Uten denne overstyringen vil missiler avfyrt i venstre vindu passere ufarlig gjennom høyre vindu.
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 flex-grow">
+                        <h3 class="text-xl font-bold text-stone-800 mb-2">Lyddesign med Bfxr</h3>
+                        <p class="text-sm text-stone-600 mb-4">
+                            Lydbildet gjenskapes via chiptune-verktøyet Bfxr. Bølgeformer moduleres og eksporteres som .wav-filer assosiert med <code>AudioStreamPlayer</code>.
+                        </p>
+                        <div class="flex gap-2">
+                            <span class="px-3 py-1 bg-stone-100 border border-stone-300 rounded-full text-xs font-bold text-stone-700">Square ⬛</span>
+                            <span class="px-3 py-1 bg-stone-100 border border-stone-300 rounded-full text-xs font-bold text-stone-700">Sine 〰️</span>
+                            <span class="px-3 py-1 bg-stone-100 border border-stone-300 rounded-full text-xs font-bold text-stone-700">Saw 🦷</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 flex-grow">
+                        <h3 class="text-xl font-bold text-stone-800 mb-2">Det Heuristiske Q&A-Systemet</h3>
+                        <p class="text-sm text-stone-600">
+                            Et dynamisk Godot Resource-system bestående av Dictionary/JSON datastrukturer. AI bygger vektinger ("risk/reward") for å etterligne det originale spillets tilfeldige og utilgivende politi/tante-hendelser.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="testing" class="tab-content">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-stone-900 mb-4 border-l-4 border-amber-500 pl-4">VM-Arkitektur og CI/CD Testing</h2>
+                <p class="text-lg text-stone-700 mb-4">
+                    For å sikre sømløs Linux-distribusjon benyttes VirtualBox. Utfordringen ligger i konflikten mellom Godot 4s Vulkan-renderere og hypervisorens OpenGL-emulering.
+                </p>
+                <p class="text-lg text-stone-700">
+                    Løsningen er å tvinge Godot til <strong>Compatibility-rendereren</strong> (OpenGL 3.3) og bygge prosjektet automatisk via "headless" bash-skripting.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <h3 class="text-xl font-bold text-stone-800 mb-4">Nødvendig VM Konfigurasjon</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <span class="text-xl mr-3 mt-1">🐧</span>
+                            <div>
+                                <strong class="block text-stone-800">Operativsystem</strong>
+                                <span class="text-sm text-stone-600">Ubuntu 20.04/22.04 LTS for bredest kompatibilitet.</span>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-xl mr-3 mt-1">📼</span>
+                            <div>
+                                <strong class="block text-stone-800">Video Memory (VRAM)</strong>
+                                <span class="text-sm text-stone-600">Min. 128 MB for å forhindre bufferfeil i visningsporter.</span>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-xl mr-3 mt-1">🎮</span>
+                            <div>
+                                <strong class="block text-stone-800">Graphics Controller & 3D</strong>
+                                <span class="text-sm text-stone-600">VBoxSVGA / VMSVGA med 3D-akselerasjon eksplisitt aktivert. Unngår uspillbar CPU-rendering.</span>
+                            </div>
+                        </li>
+                    </ul>
+                    
+                    <div class="mt-6 border-t border-stone-200 pt-4">
+                        <button onclick="simulateBuild()" id="buildBtn" class="w-full bg-stone-900 text-stone-100 font-bold py-3 rounded-lg hover:bg-stone-800 transition-colors shadow-md">
+                            Kjør Headless Eksport (CLI)
+                        </button>
+                        <div id="buildOutput" class="code-block mt-4 text-xs h-32 overflow-y-auto hidden"></div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 flex flex-col justify-center items-center">
+                     <h3 class="text-xl font-bold text-stone-800 mb-4 w-full text-left">Ressursbruk i Virtualisert Miljø</h3>
+                     <div class="chart-container w-full">
+                         <canvas id="vmChart"></canvas>
+                     </div>
+                     <p class="text-xs text-stone-500 mt-4 text-center">Sammenligning av estimert ressursbelastning ved feil (Vulkan) vs. korrekt (OpenGL 3.3) konfigurasjon.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-stone-900 text-stone-400 py-6 border-t border-stone-800 mt-12 text-center text-sm">
+        <div class="max-w-7xl mx-auto px-4">
+            <p>Super Cars 2 Klone Dokumentasjon &mdash; Generert via AI-assistert arkitektur. Ingen eksterne grafikkfiler kreves.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- State Management ---
+        const state = {
+            activeTab: 'oversikt',
+            chartsRendered: { fysikk: false, testing: false }
+        };
+
+        // --- Data Storage ---
+        const aiResponses = {
+            generate: `<span class="comment"># Utforme klasse for fiendtlig bil</span>\n<span class="keyword">class_name</span> <span class="string">EnemyCar</span> <span class="keyword">extends</span> RigidBody2D\n\n<span class="keyword">var</span> base_speed = <span class="string">400</span>\n<span class="keyword">var</span> armor = <span class="string">100</span>\n\n<span class="keyword">func</span> <span class="string">_physics_process</span>(delta):\n    <span class="comment"># AI genererer optimal rutealgoritme her</span>\n    <span class="keyword">pass</span>`,
+            fix: `<span class="comment"># Fikser minnelekkasje i flerspiller</span>\n<span class="keyword">func</span> <span class="string">_exit_tree</span>():\n    <span class="comment"># Sørg for at noder frigjøres korrekt</span>\n    <span class="keyword">if</span> is_instance_valid(weapon_node):\n        weapon_node.queue_free()\n    <span class="keyword">print</span>(<span class="string">"Ressurser ryddet."</span>)`,
+            doc: `<span class="comment">## Beregner rullemotstand for RigidBody2D.\n## \n## \param velocity Nåværende hastighetsvektor.\n## \param friction_coefficient Underlagets friksjon.\n## \return Vektor for motkraft som skal påføres.</span>\n<span class="keyword">func</span> <span class="string">calc_rolling_resistance</span>(...) -> Vector2:`,
+            simplify: `<span class="comment"># Refaktorert Q&A logikk</span>\n<span class="keyword">func</span> <span class="string">process_answer</span>(choice_id: int):\n    <span class="keyword">var</span> outcome = event_data.get(choice_id, default_penalty)\n    apply_effect(outcome.type, outcome.value)\n    <span class="comment"># Erstatter 50 linjer med if/else-trær!</span>`
+        };
+
+        const weaponData = {
+            labels: ['Skade', 'Hastighet', 'Presisjon (Homing)', 'Varighet/Skjold'],
+            datasets: [
+                {
+                    label: 'Standard Missil',
+                    data: [8, 9, 1, 2],
+                    backgroundColor: 'rgba(245, 158, 11, 0.2)', // Amber
+                    borderColor: 'rgba(245, 158, 11, 1)',
+                    pointBackgroundColor: 'rgba(245, 158, 11, 1)',
+                },
+                {
+                    label: 'Søkende Missil',
+                    data: [6, 7, 10, 3],
+                    backgroundColor: 'rgba(13, 148, 136, 0.2)', // Teal
+                    borderColor: 'rgba(13, 148, 136, 1)',
+                    pointBackgroundColor: 'rgba(13, 148, 136, 1)',
+                },
+                {
+                    label: 'Spinnende Missil',
+                    data: [5, 4, 3, 9],
+                    backgroundColor: 'rgba(168, 162, 158, 0.2)', // Stone
+                    borderColor: 'rgba(168, 162, 158, 1)',
+                    pointBackgroundColor: 'rgba(168, 162, 158, 1)',
+                }
+            ]
+        };
+
+        const vmData = {
+            labels: ['CPU Belastning', 'GPU Belastning', 'Krasj-risiko', 'Bildefrekvens (Spillbar)'],
+            datasets: [
+                {
+                    label: 'Forward+ (Vulkan) i VM',
+                    data: [95, 10, 99, 5],
+                    backgroundColor: 'rgba(239, 68, 68, 0.7)', // Red
+                },
+                {
+                    label: 'Compatibility (OpenGL 3.3)',
+                    data: [30, 75, 5, 85],
+                    backgroundColor: 'rgba(16, 185, 129, 0.7)', // Green
+                }
+            ]
+        };
+
+        // --- Core Interaction Handling ---
+
+        function switchTab(tabId) {
+            // Update Navigation UI
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-stone-800', 'text-amber-500', 'border-b-2', 'border-amber-500');
+                btn.classList.add('bg-stone-900', 'text-stone-400');
+            });
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.remove('bg-stone-900', 'text-stone-400');
+            activeBtn.classList.add('bg-stone-800', 'text-amber-500', 'border-b-2', 'border-amber-500');
+
+            // Update Content Visibility
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active');
+            
+            state.activeTab = tabId;
+
+            // Lazy Load Charts to prevent dimension bugs when container is display: none
+            if (tabId === 'fysikk' && !state.chartsRendered.fysikk) {
+                renderWeaponChart();
+                state.chartsRendered.fysikk = true;
+            }
+            if (tabId === 'testing' && !state.chartsRendered.testing) {
+                renderVmChart();
+                state.chartsRendered.testing = true;
+            }
+        }
+
+        function updateTerminal(commandType) {
+            const outputDiv = document.getElementById('terminal-output');
+            outputDiv.style.opacity = 0;
+            
+            setTimeout(() => {
+                outputDiv.innerHTML = aiResponses[commandType];
+                outputDiv.style.opacity = 1;
+            }, 150);
+        }
+
+        function simulateBuild() {
+            const btn = document.getElementById('buildBtn');
+            const output = document.getElementById('buildOutput');
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            output.classList.remove('hidden');
+            output.innerHTML = '';
+
+            const logs = [
+                "> Sjekker avhengigheter i ~/.local/share/godot/export_templates/...",
+                "> Godkjenner mal: Linux/X11...",
+                "> Initialiserer Headless modus for prosjekt...",
+                "> Kjører: godot --headless --export-release 'Linux/X11' ./SuperCarsKlone.x86_64",
+                "> Bygger scener og kompilerer GDScript...",
+                "> Pakker teksturer og Bfxr .wav filer til .pck arkiv...",
+                "> Suksess! ELF-kjørbar fil opprettet. Klar for chmod +x og VM testing."
+            ];
+
+            let i = 0;
+            const interval = setInterval(() => {
+                if (i < logs.length) {
+                    const p = document.createElement('div');
+                    p.innerText = logs[i];
+                    if (i === logs.length - 1) p.classList.add('text-green-500', 'font-bold');
+                    output.appendChild(p);
+                    output.scrollTop = output.scrollHeight;
+                    i++;
+                } else {
+                    clearInterval(interval);
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }, 600);
+        }
+
+        // --- Chart rendering (Chart.js) ---
+
+        function renderWeaponChart() {
+            const ctx = document.getElementById('weaponChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: weaponData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(0, 0, 0, 0.1)' },
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                            pointLabels: { font: { size: 12, family: 'sans-serif' }, color: '#444' },
+                            ticks: { display: false, max: 10, min: 0 }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12 } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.dataset.label + ': ' + context.raw + '/10';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderVmChart() {
+            const ctx = document.getElementById('vmChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: vmData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { callback: function(value) { return value + "%" } }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12 } }
+                    }
+                }
+            });
+        }
+
+        // Initialize first tab
+        switchTab('oversikt');
+
+    </script>
+</body>
+</html>

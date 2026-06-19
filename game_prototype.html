@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Cars 2 - Web Arena Prototype</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden; /* Forhindrer rulling */
+        }
+        #gameCanvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            pointer-events: none;
+            text-shadow: 2px 2px 0 #000;
+        }
+        h1 { margin: 0; font-size: 24px; color: #f59e0b; }
+        p { margin: 5px 0; font-size: 16px; }
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            pointer-events: none;
+            color: #a8a29e;
+            text-shadow: 1px 1px 0 #000;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <h1>SUPER CARS: ARENA</h1>
+        <p>Score: <span id="scoreDisplay">0</span></p>
+        <p>Ammunisjon: <span id="ammoDisplay">Klar</span></p>
+    </div>
+
+    <div class="controls">
+        Styring: Piltaster | Skyt: MELLOMROM
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const ammoDisplay = document.getElementById('ammoDisplay');
+
+        let width, height;
+        let score = 0;
+
+        // Spillverden dimensjoner
+        const worldSize = 2000;
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Input håndtering
+        const keys = {
+            ArrowUp: false,
+            ArrowDown: false,
+            ArrowLeft: false,
+            ArrowRight: false,
+            Space: false
+        };
+
+        window.addEventListener('keydown', (e) => {
+            if(keys.hasOwnProperty(e.code)) keys[e.code] = true;
+            if(e.code === 'Space') e.preventDefault(); // Unngå scrolling
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if(keys.hasOwnProperty(e.code)) keys[e.code] = false;
+        });
+
+        // --- Spillobjekter ---
+
+        class Player {
+            constructor() {
+                this.x = worldSize / 2;
+                this.y = worldSize / 2;
+                this.angle = -Math.PI / 2; // Peker oppover
+                this.speed = 0;
+                this.maxSpeed = 12;
+                this.acceleration = 0.4;
+                this.friction = 0.96; // Simulering av demping
+                this.turnSpeed = 0.07;
+                
+                this.width = 20;
+                this.height = 40;
+                
+                this.lastShot = 0;
+                this.fireRate = 300; // ms mellom skudd
+            }
+
+            update() {
+                // Fysikk og Input
+                if (keys.ArrowUp) this.speed += this.acceleration;
+                if (keys.ArrowDown) this.speed -= this.acceleration * 0.8; // Saktere i revers
+
+                // Styring (bare hvis vi er i bevegelse)
+                if (Math.abs(this.speed) > 0.5) {
+                    let dir = this.speed > 0 ? 1 : -1;
+                    if (keys.ArrowLeft) this.angle -= this.turnSpeed * dir;
+                    if (keys.ArrowRight) this.angle += this.turnSpeed * dir;
+                }
+
+                // Friksjon og fartsgrense
+                this.speed *= this.friction;
+                if (this.speed > this.maxSpeed) this.speed = this.maxSpeed;
+                if (this.speed < -this.maxSpeed/2) this.speed = -this.maxSpeed/2;
+
+                // Bevegelse
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
+
+                // Verdensgrenser
+                if (this.x < 0) this.x = 0;
+                if (this.x > worldSize) this.x = worldSize;
+                if (this.y < 0) this.y = 0;
+                if (this.y > worldSize) this.y = worldSize;
+
+                // Skyting
+                let nå = Date.now();
+                if (keys.Space && nå - this.lastShot > this.fireRate) {
+                    shootMissile(this.x, this.y, this.angle);
+                    this.lastShot = nå;
+                    ammoDisplay.innerText = "Lader...";
+                    ammoDisplay.style.color = "red";
+                    setTimeout(() => {
+                        ammoDisplay.innerText = "Klar";
+                        ammoDisplay.style.color = "white";
+                    }, this.fireRate);
+                }
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                
+                // Tegn bil (Rød retro-look)
+                ctx.fillStyle = '#dc2626'; // Karosseri
+                ctx.fillRect(-this.height/2, -this.width/2, this.height, this.width);
+                
+                ctx.fillStyle = '#1e293b'; // Frontrute
+                ctx.fillRect(0, -this.width/2 + 2, 8, this.width - 4);
+                
+                // Frontlykter
+                ctx.fillStyle = '#fef08a';
+                ctx.fillRect(this.height/2 - 4, -this.width/2 + 2, 4, 4);
+                ctx.fillRect(this.height/2 - 4, this.width/2 - 6, 4, 4);
+
+                ctx.restore();
+            }
+        }
+
+        class Missile {
+            constructor(x, y, angle) {
+                // Plasser foran bilen
+                this.x = x + Math.cos(angle) * 25;
+                this.y = y + Math.sin(angle) * 25;
+                this.angle = angle;
+                this.speed = 20;
+                this.active = true;
+                this.life = 60; // Frames
+            }
+
+            update() {
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
+                this.life--;
+                if (this.life <= 0) this.active = false;
+                
+                // Legg til et lite røykspor
+                particles.push(new Particle(this.x, this.y, '#f59e0b', 0.5, 10));
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                ctx.fillStyle = '#fcd34d';
+                ctx.fillRect(-5, -2, 10, 4);
+                ctx.restore();
+            }
+        }
+
+        class Enemy {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 30;
+                this.height = 30;
+                this.active = true;
+                this.angle = Math.random() * Math.PI * 2;
+                this.speed = 2 + Math.random() * 3;
+            }
+
+            update() {
+                // Dum AI: Kjør fremover, snu litt tilfeldig
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
+                
+                if(Math.random() < 0.02) this.angle += (Math.random() - 0.5);
+
+                // Sprett i veggen
+                if (this.x < 0 || this.x > worldSize) this.angle = Math.PI - this.angle;
+                if (this.y < 0 || this.y > worldSize) this.angle = -this.angle;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                ctx.fillStyle = '#475569'; // Grå fiendebil
+                ctx.fillRect(-15, -15, 30, 30);
+                
+                // blinkende lys
+                if(Math.floor(Date.now() / 200) % 2 === 0) {
+                    ctx.fillStyle = '#ef4444';
+                    ctx.fillRect(0, -5, 10, 10);
+                }
+                ctx.restore();
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color, speedScale, life) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.angle = Math.random() * Math.PI * 2;
+                this.speed = Math.random() * speedScale;
+                this.life = life;
+                this.maxLife = life;
+                this.active = true;
+            }
+            update() {
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
+                this.life--;
+                if(this.life <= 0) this.active = false;
+            }
+            draw(ctx) {
+                ctx.globalAlpha = this.life / this.maxLife;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        // --- Spilltilstand ---
+        const player = new Player();
+        let missiles = [];
+        let enemies = [];
+        let particles = [];
+
+        function shootMissile(x, y, angle) {
+            missiles.push(new Missile(x, y, angle));
+        }
+
+        function spawnEnemy() {
+            if (enemies.length < 15) {
+                let ex = Math.random() * worldSize;
+                let ey = Math.random() * worldSize;
+                // Ikke spawn oppå spilleren
+                if (Math.hypot(ex - player.x, ey - player.y) > 300) {
+                    enemies.push(new Enemy(ex, ey));
+                }
+            }
+        }
+
+        function createExplosion(x, y) {
+            for(let i=0; i<30; i++) {
+                particles.push(new Particle(x, y, '#ef4444', 8, 30)); // Rød
+                particles.push(new Particle(x, y, '#f59e0b', 5, 20)); // Gul
+                particles.push(new Particle(x, y, '#333333', 3, 40)); // Røyk
+            }
+        }
+
+        // Initial fiender
+        for(let i=0; i<10; i++) spawnEnemy();
+
+        // --- Hovedløkke ---
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function update() {
+            player.update();
+
+            // Oppdater missiler
+            for (let i = missiles.length - 1; i >= 0; i--) {
+                let m = missiles[i];
+                m.update();
+                if (!m.active) missiles.splice(i, 1);
+            }
+
+            // Oppdater partikler
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.update();
+                if (!p.active) particles.splice(i, 1);
+            }
+
+            // Oppdater fiender og sjekk kollisjon med missiler
+            for (let e = enemies.length - 1; e >= 0; e--) {
+                let enemy = enemies[e];
+                enemy.update();
+
+                for (let m = missiles.length - 1; m >= 0; m--) {
+                    let missile = missiles[m];
+                    // Veldig enkel sirkulær kollisjonstest
+                    let dist = Math.hypot(enemy.x - missile.x, enemy.y - missile.y);
+                    if (dist < 20) {
+                        enemy.active = false;
+                        missile.active = false;
+                        createExplosion(enemy.x, enemy.y);
+                        score += 100;
+                        scoreDisplay.innerText = score;
+                        break;
+                    }
+                }
+
+                // Kollisjon mellom spiller og fiende (kræsj)
+                let crashDist = Math.hypot(enemy.x - player.x, enemy.y - player.y);
+                if (crashDist < 30) {
+                    // Skyv hverandre unna (Enkel RigidBody simulering)
+                    player.speed *= -0.5;
+                    enemy.angle += Math.PI;
+                    createExplosion((player.x + enemy.x)/2, (player.y + enemy.y)/2);
+                }
+
+                if (!enemy.active) enemies.splice(e, 1);
+            }
+
+            // Spawn nye fiender over tid
+            if (Math.random() < 0.02) spawnEnemy();
+        }
+
+        function draw() {
+            // Tøm skjerm
+            ctx.fillStyle = '#22c55e'; // Gress-farge
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.save();
+            // Kamera sentrert på spiller
+            ctx.translate(width / 2 - player.x, height / 2 - player.y);
+
+            // Tegn banegrenser (Asfalt arena)
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(0, 0, worldSize, worldSize);
+            
+            // Grid lines for fartsfølelse
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 2;
+            for(let i=0; i<=worldSize; i+=100) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, worldSize); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(worldSize, i); ctx.stroke();
+            }
+
+            // Tegn objekter
+            particles.forEach(p => p.draw(ctx));
+            enemies.forEach(e => e.draw(ctx));
+            missiles.forEach(m => m.draw(ctx));
+            player.draw(ctx);
+
+            ctx.restore();
+        }
+
+        // Start spillet
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
